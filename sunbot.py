@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 
 
 FILTER_OVERRIDES = {
-    "filter": {"before": ["vocal"], "after": ["pro"]},
-    "generator": {"before": ["analog"]},
+    "filter": {"before": [":vocal", "vocal"], "after": ["pro", "pro:"]},
+    "generator": {"before": [":analog", "analog"]},
 }
 
 
@@ -52,11 +52,18 @@ class SunBotClient(discord.Client):
                                 break
                     if not override_found:
                         for override in after:
-                            if (last := idx + len(override)) <= len(override):
-                                searchafter = searchtext[idx:last]
+                            if (last := start + len(override)) <= len(searchtext):
+                                searchafter = searchtext[start:last]
                                 if searchafter == override:
                                     override_found = True
                                     break
+                if (
+                    idx > 0
+                    and searchtext[idx - 1] == ":"
+                    and start < len(searchtext)
+                    and searchtext[start] == ":"
+                ):
+                    override_found = True
                 if not override_found:
                     reactions_by_index[idx] = ename
         reactions = [ename for idx, ename in sorted(reactions_by_index.items())]
