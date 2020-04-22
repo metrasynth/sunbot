@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional
+from typing import List
 
 import discord
 from dotenv import load_dotenv
