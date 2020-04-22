@@ -1,4 +1,5 @@
 import os
+from typing import List, Optional
 
 import discord
 from dotenv import load_dotenv
@@ -45,25 +46,31 @@ EMOJI_REACTIONS = {
 
 
 class SunBotClient(discord.Client):
-    def __init__(self):
+    def __init__(self, guild_names: List[str]):
         super(SunBotClient, self).__init__()
+        self.guild_names = guild_names
         self.guild_emoji = {}
 
     async def on_ready(self):
+        await self._on_ready_autoreactor()
+
+    async def on_message(self, message: discord.Message):
+        await self._on_message_autoreactor(message)
+
+    async def _on_ready_autoreactor(self):
         guild: discord.Guild
         emoji: discord.Emoji
         for guild in self.guilds:
-            e = self.guild_emoji[guild.id] = {}
-            for emoji in guild.emojis:
-                ename = emoji.name.lower()
-                print(f"{guild.name} / {emoji.name} ({ename})")
-                e[ename] = emoji
+            if guild.name in self.guild_names:
+                e = self.guild_emoji[guild.id] = {}
+                for emoji in guild.emojis:
+                    ename = emoji.name.lower()
+                    print(f"{guild.name} / {emoji.name} ({ename})")
+                    e[ename] = emoji
 
-    async def on_message(self, message: discord.Message):
-        await self._react_to_emoji_references(message)
-
-    async def _react_to_emoji_references(self, message: discord.Message):
-        if message.author == self.user:
+    async def _on_message_autoreactor(self, message: discord.Message):
+        guild: discord.Guild = message.guild
+        if message.author == self.user or guild.name not in self.guild_names:
             return
         e = self.guild_emoji[message.guild.id]
         searchtext = message.content.lower().replace(" ", "")
@@ -112,9 +119,13 @@ class SunBotClient(discord.Client):
             await message.add_reaction(e[ename])
 
 
-if __name__ == "__main__":
+def main():
     load_dotenv("local.env")
-    TOKEN = os.getenv("BOT_TOKEN")
-    client = SunBotClient()
+    bot_token = os.environ["BOT_TOKEN"]
+    guild_names = os.environ["GUILD_NAMES"].split(";")
+    client = SunBotClient(guild_names=guild_names)
+    client.run(bot_token)
 
-    client.run(TOKEN)
+
+if __name__ == "__main__":
+    main()
