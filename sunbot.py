@@ -82,23 +82,25 @@ class SunBotClient(discord.Client):
                     nobefore = overrides.get("nobefore", [])
                     noafter = overrides.get("noafter", [])
                     for override in nobefore:
-                        if (first := idx - len(override)) >= 0:
+                        first = idx - len(override)
+                        if first >= 0:
                             searchbefore = searchtext[first:idx]
                             if searchbefore == override:
                                 override_found = True
                                 break
                     if not override_found:
                         for override in noafter:
-                            if (last := start + len(override)) <= len(searchtext):
+                            last = start + len(override)
+                            if last <= len(searchtext):
                                 searchafter = searchtext[start:last]
                                 if searchafter == override:
                                     override_found = True
                                     break
                 if (
-                        idx > 0
-                        and searchtext[idx - 1] == ":"
-                        and start < len(searchtext)
-                        and searchtext[start] == ":"
+                    idx > 0
+                    and searchtext[idx - 1] == ":"
+                    and start < len(searchtext)
+                    and searchtext[start] == ":"
                 ):
                     override_found = True
                 if not override_found:
