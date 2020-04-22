@@ -3,10 +3,44 @@ import os
 import discord
 from dotenv import load_dotenv
 
-
-FILTER_OVERRIDES = {
-    "filter": {"before": [":vocal", "vocal"], "after": ["pro", "pro:"]},
-    "generator": {"before": [":analog", "analog"]},
+EMOJI_REACTIONS = {
+    "amplifier": {},
+    "analoggenerator": {},
+    "compressor": {},
+    "dcblocker": {},
+    "delay": {},
+    "distortion": {},
+    "drumsynth": {},
+    "echo": {},
+    "eq": {},
+    "feedback": {},
+    "filter": {"nobefore": [":vocal", "vocal"], "noafter": ["pro", "pro:"]},
+    "filterpro": {},
+    "flanger": {},
+    "fm": {},
+    "generator": {"nobefore": [":analog", "analog"]},
+    "glide": {},
+    "gpio": {},
+    "input": {},
+    "kicker": {},
+    "lfo": {},
+    "loop": {},
+    "metamodule": {},
+    "modulator": {},
+    "multictl": {},
+    "multisynth": {},
+    "output": {},
+    "pitch2ctl": {},
+    "pitchshifter": {},
+    "reverb": {},
+    "sampler": {},
+    "sound2ctl": {},
+    "spectravoice": {},
+    "velocity2ctl": {},
+    "vibrato": {},
+    "vocalfilter": {},
+    "vorbisplayer": {},
+    "waveshaper": {},
 }
 
 
@@ -26,12 +60,15 @@ class SunBotClient(discord.Client):
                 e[ename] = emoji
 
     async def on_message(self, message: discord.Message):
-        if message.author == client.user:
+        await self._react_to_emoji_references(message)
+
+    async def _react_to_emoji_references(self, message: discord.Message):
+        if message.author == self.user:
             return
         e = self.guild_emoji[message.guild.id]
         searchtext = message.content.lower().replace(" ", "")
         reactions_by_index = {}
-        for ename in e:
+        for ename in set(e).intersection(set(EMOJI_REACTIONS)):
             start = 0
             while True:
                 try:
@@ -39,29 +76,29 @@ class SunBotClient(discord.Client):
                 except ValueError:
                     break
                 start = idx + len(ename)
-                overrides = FILTER_OVERRIDES.get(ename)
+                overrides = EMOJI_REACTIONS.get(ename)
                 override_found = False
                 if overrides:
-                    before = overrides.get("before", [])
-                    after = overrides.get("after", [])
-                    for override in before:
+                    nobefore = overrides.get("nobefore", [])
+                    noafter = overrides.get("noafter", [])
+                    for override in nobefore:
                         if (first := idx - len(override)) >= 0:
                             searchbefore = searchtext[first:idx]
                             if searchbefore == override:
                                 override_found = True
                                 break
                     if not override_found:
-                        for override in after:
+                        for override in noafter:
                             if (last := start + len(override)) <= len(searchtext):
                                 searchafter = searchtext[start:last]
                                 if searchafter == override:
                                     override_found = True
                                     break
                 if (
-                    idx > 0
-                    and searchtext[idx - 1] == ":"
-                    and start < len(searchtext)
-                    and searchtext[start] == ":"
+                        idx > 0
+                        and searchtext[idx - 1] == ":"
+                        and start < len(searchtext)
+                        and searchtext[start] == ":"
                 ):
                     override_found = True
                 if not override_found:
