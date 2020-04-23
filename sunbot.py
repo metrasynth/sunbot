@@ -58,6 +58,9 @@ class SunBotClient(discord.Client):
         await self._on_ready_autoreactor()
 
     async def on_message(self, message: discord.Message):
+        guild: discord.Guild = message.guild
+        if message.author == self.user or guild.name not in self.guild_names:
+            return
         await self._on_message_autoreactor(message)
 
     async def _on_ready_autoreactor(self):
@@ -72,9 +75,6 @@ class SunBotClient(discord.Client):
                     e[ename] = emoji
 
     async def _on_message_autoreactor(self, message: discord.Message):
-        guild: discord.Guild = message.guild
-        if message.author == self.user or guild.name not in self.guild_names:
-            return
         e = self.guild_emoji[message.guild.id]
         searchtext = message.content.lower().replace(" ", "")
         reactions_by_index = {}
