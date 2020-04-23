@@ -1,2 +1,6 @@
 discord.py == 1.3.3
+normality == 2.0.0
 python-dotenv == 0.13.0
+PyICU==2.4.3
+-e git+https://github.com/metrasynth/sunvox-dll-python@1.9.5c#egg=sunvox-dll-python
+-e git+https://github.com/metrasynth/radiant-voices@0.4.x-dev#egg=radiant-voices

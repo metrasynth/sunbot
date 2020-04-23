@@ -4,6 +4,8 @@ from typing import List
 
 import discord
 from dotenv import load_dotenv
+from normality import ascii_text
+
 log = logging.getLogger(__name__)
 
 
@@ -77,6 +79,14 @@ class SunBotClient(discord.Client):
     async def _on_message_autoreactor(self, message: discord.Message):
         e = self.guild_emoji[message.guild.id]
         searchtext = message.content.lower().replace(" ", "")
+        searchtext = message.content
+        # extract salt 😎
+        searchtext = searchtext.replace("ꜞ", "i").replace("\u2006", " ")
+        # 6-bit distortion 🎸
+        searchtext = ascii_text(searchtext)
+        # waveshaper ∿
+        searchtext = searchtext.replace(" ", "").lower()
+        log.debug("searchtext transformed %r -> %r", message.content, searchtext)
         reactions_by_index = {}
         for ename in set(e).intersection(set(EMOJI_REACTIONS)):
             start = 0
