@@ -1,8 +1,11 @@
+import logging
 import os
 from typing import List
 
 import discord
 from dotenv import load_dotenv
+log = logging.getLogger(__name__)
+
 
 EMOJI_REACTIONS = {
     "amplifier": {},
@@ -114,13 +117,15 @@ class SunBotClient(discord.Client):
                     reactions_by_index[idx] = ename
         reactions = [ename for idx, ename in sorted(reactions_by_index.items())]
         if reactions:
-            print(f"Reacting to f{message.content!r} with {reactions}")
+            log.info("Reacting to %r with %r", message.content, reactions)
         for ename in reactions:
             await message.add_reaction(e[ename])
 
 
 def main():
     load_dotenv("local.env")
+    log_level = os.getenv("LOG_LEVEL", "INFO")
+    logging.basicConfig(level=log_level)
     bot_token = os.environ["BOT_TOKEN"]
     guild_names = os.environ["GUILD_NAMES"].split(";")
     client = SunBotClient(guild_names=guild_names)
