@@ -19,7 +19,7 @@ EMOJI_REACTIONS = {
     "eq": {},
     "feedback": {},
     "filter": {"nobefore": [":vocal", "vocal"], "noafter": ["pro", "pro:"]},
-    "filterpro": {},
+    "filterpro": {"nobefore": ["vocal"]},
     "flanger": {},
     "fm": {},
     "generator": {"nobefore": [":analog", "analog"]},
@@ -42,7 +42,7 @@ EMOJI_REACTIONS = {
     "spectravoice": {},
     "velocity2ctl": {},
     "vibrato": {},
-    "vocalfilter": {},
+    "vocalfilter": {"noafter": ["pro"]},
     "vorbisplayer": {},
     "waveshaper": {},
 }
