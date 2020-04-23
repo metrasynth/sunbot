@@ -64,6 +64,7 @@ class SunBotClient(discord.Client):
         if message.author == self.user or guild.name not in self.guild_names:
             return
         await self._on_message_autoreactor(message)
+        await self._on_message_projectrenderer(message)
 
     async def _on_ready_autoreactor(self):
         guild: discord.Guild
@@ -78,7 +79,6 @@ class SunBotClient(discord.Client):
 
     async def _on_message_autoreactor(self, message: discord.Message):
         e = self.guild_emoji[message.guild.id]
-        searchtext = message.content.lower().replace(" ", "")
         searchtext = message.content
         # extract salt 😎
         searchtext = searchtext.replace("ꜞ", "i").replace("\u2006", " ")
@@ -130,6 +130,11 @@ class SunBotClient(discord.Client):
             log.info("Reacting to %r with %r", message.content, reactions)
         for ename in reactions:
             await message.add_reaction(e[ename])
+
+    async def _on_message_projectrenderer(self, message: discord.Message):
+        for attachment in message.attachments:
+            if attachment.filename.lower().endswith(".sunvox"):
+                log.info("Found SunVox attachment of %d bytes", attachment.size)
 
 
 def main():
