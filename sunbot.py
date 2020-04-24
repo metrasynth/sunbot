@@ -30,7 +30,7 @@ EMOJI_REACTIONS = {
     "filter": {"nobefore": [":vocal", "vocal"], "noafter": ["pro", "pro:"]},
     "filterpro": {"nobefore": ["vocal"]},
     "flanger": {},
-    "fm": {},
+    "fm": {"withspaces": True},
     "generator": {"nobefore": [":analog", "analog"]},
     "glide": {},
     "gpio": {},
@@ -90,20 +90,22 @@ class SunBotClient(discord.Client):
         # extract salt 😎
         searchtext = searchtext.replace("ꜞ", "i").replace("\u2006", " ")
         # 6-bit distortion 🎸
-        searchtext = ascii_text(searchtext)
+        searchtext_withspaces = ascii_text(searchtext).lower()
         # waveshaper ∿
-        searchtext = searchtext.replace(" ", "").lower()
+        searchtext_nospaces = searchtext_withspaces.replace(" ", "")
         log.debug("searchtext transformed %r -> %r", message.content, searchtext)
         reactions_by_index = {}
         for ename in set(e).intersection(set(EMOJI_REACTIONS)):
             start = 0
+            overrides = EMOJI_REACTIONS.get(ename)
+            withspaces = overrides.get("withspaces", False)
+            searchtext = searchtext_withspaces if withspaces else searchtext_nospaces
             while True:
                 try:
                     idx = searchtext.index(ename, start)
                 except ValueError:
                     break
                 start = idx + len(ename)
-                overrides = EMOJI_REACTIONS.get(ename)
                 override_found = False
                 if overrides:
                     nobefore = overrides.get("nobefore", [])
@@ -123,13 +125,19 @@ class SunBotClient(discord.Client):
                                 if searchafter == override:
                                     override_found = True
                                     break
-                if (
+                inside_an_emoji = (
                     idx > 0
                     and searchtext[idx - 1] == ":"
                     and start < len(searchtext)
                     and searchtext[start] == ":"
-                ):
+                )
+                if inside_an_emoji:
                     override_found = True
+                if withspaces:
+                    if idx > 0 and searchtext[idx - 1].isalnum():
+                        override_found = True
+                    elif searchtext[start:start + 1].isalnum():
+                        override_found = True
                 if not override_found:
                     reactions_by_index[idx] = ename
         reactions = [ename for idx, ename in sorted(reactions_by_index.items())]
