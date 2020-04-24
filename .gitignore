@@ -1,2 +1,7 @@
-.stfolder
+.stfolder/
+.idea/
+.vscode/
+__pycache__/
+files/
+
 local.env
