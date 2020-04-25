@@ -5,56 +5,16 @@ from typing import List
 
 import discord
 from dotenv import load_dotenv
-from normality import ascii_text
 from rv.api import read_sunvox_file
 from sunvox.api import Slot
 from sunvox.buffered import BufferedProcess, float32
 
+from autoreact import reactions_for_message_content
+from reactions import REACTION_OPTIONS
+
 log = logging.getLogger(__name__)
 
-
 FILES_PATH = Path(__file__).parent / "files"
-
-
-EMOJI_REACTIONS = {
-    "amplifier": {},
-    "analoggenerator": {},
-    "compressor": {},
-    "dcblocker": {},
-    "delay": {},
-    "distortion": {},
-    "drumsynth": {},
-    "echo": {},
-    "eq": {},
-    "feedback": {},
-    "filter": {"nobefore": [":vocal", "vocal"], "noafter": ["pro", "pro:"]},
-    "filterpro": {"nobefore": ["vocal"]},
-    "flanger": {},
-    "fm": {"withspaces": True},
-    "generator": {"nobefore": [":analog", "analog"]},
-    "glide": {},
-    "gpio": {},
-    "input": {},
-    "kicker": {},
-    "lfo": {},
-    "loop": {},
-    "metamodule": {},
-    "modulator": {},
-    "multictl": {},
-    "multisynth": {},
-    "output": {},
-    "pitch2ctl": {},
-    "pitchshifter": {},
-    "reverb": {},
-    "sampler": {},
-    "sound2ctl": {},
-    "spectravoice": {},
-    "velocity2ctl": {},
-    "vibrato": {},
-    "vocalfilter": {"noafter": ["pro"]},
-    "vorbisplayer": {},
-    "waveshaper": {},
-}
 
 
 class SunBotClient(discord.Client):
@@ -85,66 +45,16 @@ class SunBotClient(discord.Client):
                     e[ename] = emoji
 
     async def _on_message_autoreactor(self, message: discord.Message):
-        e = self.guild_emoji[message.guild.id]
-        searchtext = message.content
-        # extract salt 😎
-        searchtext = searchtext.replace("ꜞ", "i").replace("\u2006", " ")
-        # 6-bit distortion 🎸
-        searchtext_withspaces = ascii_text(searchtext).lower()
-        # waveshaper ∿
-        searchtext_nospaces = searchtext_withspaces.replace(" ", "")
-        log.debug("searchtext transformed %r -> %r", message.content, searchtext)
-        reactions_by_index = {}
-        for ename in set(e).intersection(set(EMOJI_REACTIONS)):
-            start = 0
-            overrides = EMOJI_REACTIONS.get(ename)
-            withspaces = overrides.get("withspaces", False)
-            searchtext = searchtext_withspaces if withspaces else searchtext_nospaces
-            while True:
-                try:
-                    idx = searchtext.index(ename, start)
-                except ValueError:
-                    break
-                start = idx + len(ename)
-                override_found = False
-                if overrides:
-                    nobefore = overrides.get("nobefore", [])
-                    noafter = overrides.get("noafter", [])
-                    for override in nobefore:
-                        first = idx - len(override)
-                        if first >= 0:
-                            searchbefore = searchtext[first:idx]
-                            if searchbefore == override:
-                                override_found = True
-                                break
-                    if not override_found:
-                        for override in noafter:
-                            last = start + len(override)
-                            if last <= len(searchtext):
-                                searchafter = searchtext[start:last]
-                                if searchafter == override:
-                                    override_found = True
-                                    break
-                inside_an_emoji = (
-                    idx > 0
-                    and searchtext[idx - 1] == ":"
-                    and start < len(searchtext)
-                    and searchtext[start] == ":"
-                )
-                if inside_an_emoji:
-                    override_found = True
-                if withspaces:
-                    if idx > 0 and searchtext[idx - 1].isalnum():
-                        override_found = True
-                    elif searchtext[start:start + 1].isalnum():
-                        override_found = True
-                if not override_found:
-                    reactions_by_index[idx] = ename
-        reactions = [ename for idx, ename in sorted(reactions_by_index.items())]
+        emoji_map = self.guild_emoji[message.guild.id]
+        reactions = reactions_for_message_content(
+            content=message.content,
+            emoji_map=emoji_map,
+            reaction_options=REACTION_OPTIONS,
+        )
         if reactions:
             log.info("Reacting to %r with %r", message.content, reactions)
         for ename in reactions:
-            await message.add_reaction(e[ename])
+            await message.add_reaction(emoji_map[ename])
 
     async def _on_message_projectrenderer(self, message: discord.Message):
         if os.getenv("PROJECTRENDERER") != "1":
