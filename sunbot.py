@@ -6,11 +6,10 @@ from typing import List
 import discord
 from dotenv import load_dotenv
 from rv.api import read_sunvox_file
-from sunvox.api import Slot
-from sunvox.buffered import BufferedProcess, float32
 
 from autoreact import reactions_for_message_content
 from reactions import REACTION_OPTIONS
+from sunvox2ogg import sunvox2ogg
 
 log = logging.getLogger(__name__)
 
@@ -73,21 +72,12 @@ class SunBotClient(discord.Client):
                     f"I found a SunVox Project, called {project.name!r}. "
                     "I'll render it to an OGG file now and upload it here."
                 )
-                freq = 44100
-                p = BufferedProcess(freq=freq, size=freq, channels=2, data_type=float32)
-                slot = Slot(str(file_path), process=p)
-                length = slot.get_song_length_frames()
-                slot.play_from_beginning()
-                position = 0
-                while position < length:
-                    log.info("%r, %r", position, length)
-                    buffer = p.fill_buffer()
-                    one_second = position + freq
-                    end_pos = min(one_second, length)
-                    copy_size = end_pos - position
-                    if copy_size < one_second:
-                        buffer = buffer[:copy_size]
-                    position = end_pos
+                ogg_path = file_path.with_suffix(".ogg")
+                await sunvox2ogg(str(file_path), str(ogg_path))
+                with ogg_path.open("rb") as f:
+                    upload_file = discord.File(f, filename=ogg_path.name)
+                    content = f"Here is the OGG file for {project.name!r}:"
+                    await channel.send(content=content, file=upload_file)
 
 
 def main():
