@@ -53,8 +53,8 @@ class SunBotClient(discord.Client):
         )
         if reactions:
             log.info("Reacting to %r with %r", message.content, reactions)
-        for ename in reactions:
-            await message.add_reaction(emoji_map[ename])
+        for reaction in reactions:
+            await message.add_reaction(reaction)
 
     async def _on_message_projectrenderer(self, message: discord.Message):
         if os.getenv("PROJECTRENDERER") != "1":
