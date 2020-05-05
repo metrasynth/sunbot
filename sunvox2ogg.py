@@ -26,7 +26,7 @@ async def sunvox2ogg(
         position = 0
         with SoundFile(str(ogg_path), "w", freq, channels) as ogg_f:
             while position < length:
-                log.info("%r, %r", position, length)
+                percentage = position * 100.0 / length
                 buffer = process.fill_buffer()
                 one_second = position + freq
                 end_pos = min(one_second, length)
@@ -44,6 +44,7 @@ async def sunvox2ogg(
                             max_file_size,
                         )
                         break
+                log.info("Rendered %r of %r (%.2f%%), %r bytes written", position, length, percentage, file_size)
                 position = end_pos
                 await asyncio.sleep(0)
     finally:

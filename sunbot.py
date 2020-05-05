@@ -87,10 +87,12 @@ class SunBotClient(discord.Client):
                     freq=freq,
                     channels=channels,
                 )
+                log.info("Rendered to %r", ogg_path)
                 with ogg_path.open("rb") as f:
                     upload_file = discord.File(f, filename=ogg_path.name)
                     content = f"Here is the OGG file for {project_name!r}:"
                     await channel.send(content=content, file=upload_file)
+                    log.info("Sent to %r", channel)
 
 
 def main():
