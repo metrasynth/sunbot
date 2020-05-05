@@ -1,34 +1,40 @@
 import asyncio
 from logging import getLogger, basicConfig
 import sys
+from pathlib import Path
 
-import soundfile as sf
+from soundfile import SoundFile
 from sunvox.api import Slot
-from sunvox.buffered import BufferedProcess, float32
+from sunvox.buffered import BufferedProcess
 
 log = getLogger(__name__)
 
 
-async def sunvox2ogg(sunvox_path: str, ogg_path: str, max_file_size=8000000):
-    freq = 44100
-    channels = 2
-    p = BufferedProcess(freq=freq, size=freq, channels=channels, data_type=float32)
+async def sunvox2ogg(
+    process: BufferedProcess,
+    slot: Slot,
+    ogg_path: Path,
+    freq: int,
+    channels: int,
+    max_file_size=8000000,
+):
+    ogg_path = Path(ogg_path)
     try:
-        slot = Slot(sunvox_path, process=p)
         length = slot.get_song_length_frames()
+        log.info("Sunvox reports song length is %d frames", length)
         slot.play_from_beginning()
         position = 0
-        with sf.SoundFile(ogg_path, "w", freq, channels) as ogg_f:
+        with SoundFile(str(ogg_path), "w", freq, channels) as ogg_f:
             while position < length:
                 log.info("%r, %r", position, length)
-                buffer = p.fill_buffer()
+                buffer = process.fill_buffer()
                 one_second = position + freq
                 end_pos = min(one_second, length)
                 copy_size = end_pos - position
                 if copy_size < one_second:
                     buffer = buffer[:copy_size]
                 ogg_f.buffer_write(buffer, dtype="float32")
-                with open(ogg_path, "rb") as written_ogg_f:
+                with ogg_path.open("rb") as written_ogg_f:
                     written_ogg_f.seek(0, 2)
                     file_size = written_ogg_f.tell()
                     if file_size > max_file_size:
@@ -41,7 +47,7 @@ async def sunvox2ogg(sunvox_path: str, ogg_path: str, max_file_size=8000000):
                 position = end_pos
                 await asyncio.sleep(0)
     finally:
-        p.kill()
+        process.kill()
 
 
 def main():

@@ -5,7 +5,8 @@ from typing import List
 
 import discord
 from dotenv import load_dotenv
-from rv.api import read_sunvox_file
+from sunvox.api import Slot
+from sunvox.buffered import BufferedProcess, float32
 
 from autoreact import reactions_for_message_content
 from reactions import REACTION_OPTIONS
@@ -61,22 +62,34 @@ class SunBotClient(discord.Client):
         for attachment in message.attachments:
             if attachment.filename.lower().endswith(".sunvox"):
                 log.info("Found SunVox attachment of %d bytes", attachment.size)
-                file_path = FILES_PATH / str(attachment.id) / attachment.filename
-                file_path.parent.mkdir(parents=True, exist_ok=True)
-                with file_path.open("wb") as f:
+                sunvox_path = FILES_PATH / str(attachment.id) / attachment.filename
+                sunvox_path.parent.mkdir(parents=True, exist_ok=True)
+                with sunvox_path.open("wb") as f:
                     await attachment.save(f)
-                    log.info("Saved to %r", file_path)
-                project = read_sunvox_file(str(file_path))
+                    log.info("Saved to %r", sunvox_path)
+                freq = 44100
+                channels = 2
+                process = BufferedProcess(
+                    freq=freq, size=freq, channels=channels, data_type=float32
+                )
+                slot = Slot(sunvox_path, process=process)
+                project_name = slot.get_song_name()
                 channel: discord.TextChannel = message.channel
                 await channel.send(
-                    f"I found a SunVox Project, called {project.name!r}. "
+                    f"I found a SunVox Project, called {project_name!r}. "
                     "I'll render it to an OGG file now and upload it here."
                 )
-                ogg_path = file_path.with_suffix(".ogg")
-                await sunvox2ogg(str(file_path), str(ogg_path))
+                ogg_path = sunvox_path.with_suffix(".ogg")
+                await sunvox2ogg(
+                    process=process,
+                    slot=slot,
+                    ogg_path=ogg_path,
+                    freq=freq,
+                    channels=channels,
+                )
                 with ogg_path.open("rb") as f:
                     upload_file = discord.File(f, filename=ogg_path.name)
-                    content = f"Here is the OGG file for {project.name!r}:"
+                    content = f"Here is the OGG file for {project_name!r}:"
                     await channel.send(content=content, file=upload_file)
 
 
