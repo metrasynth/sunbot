@@ -57,6 +57,7 @@ class SunBotClient(discord.Client):
             await message.add_reaction(reaction)
 
     async def _on_message_projectrenderer(self, message: discord.Message):
+        channel: discord.TextChannel = message.channel
         if os.getenv("PROJECTRENDERER") != "1":
             return
         for attachment in message.attachments:
@@ -67,32 +68,39 @@ class SunBotClient(discord.Client):
                 with sunvox_path.open("wb") as f:
                     await attachment.save(f)
                     log.info("Saved to %r", sunvox_path)
-                freq = 44100
-                channels = 2
-                process = BufferedProcess(
-                    freq=freq, size=freq, channels=channels, data_type=float32
-                )
-                slot = Slot(sunvox_path, process=process)
-                project_name = slot.get_song_name()
-                channel: discord.TextChannel = message.channel
-                await channel.send(
-                    f"I found a SunVox Project, called {project_name!r}. "
-                    "I'll render it to an OGG file now and upload it here."
-                )
-                ogg_path = sunvox_path.with_suffix(".ogg")
-                await sunvox2ogg(
-                    process=process,
-                    slot=slot,
-                    ogg_path=ogg_path,
-                    freq=freq,
-                    channels=channels,
-                )
-                log.info("Rendered to %r", ogg_path)
-                with ogg_path.open("rb") as f:
-                    upload_file = discord.File(f, filename=ogg_path.name)
-                    content = f"Here is the OGG file for {project_name!r}:"
-                    await channel.send(content=content, file=upload_file)
-                    log.info("Sent to %r", channel)
+                try:
+                    freq = 44100
+                    channels = 2
+                    process = BufferedProcess(
+                        freq=freq, size=freq, channels=channels, data_type=float32
+                    )
+                    slot = Slot(sunvox_path, process=process)
+                    project_name = slot.get_song_name()
+                    await channel.send(
+                        f"I found a SunVox Project, called {project_name!r}. "
+                        "I'll render it to an OGG file now and upload it here."
+                    )
+                    ogg_path = sunvox_path.with_suffix(".ogg")
+                    await sunvox2ogg(
+                        process=process,
+                        slot=slot,
+                        ogg_path=ogg_path,
+                        freq=freq,
+                        channels=channels,
+                    )
+                    log.info("Rendered to %r", ogg_path)
+                    with ogg_path.open("rb") as f:
+                        upload_file = discord.File(f, filename=ogg_path.name)
+                        content = f"Here is the OGG file for {project_name!r}:"
+                        await channel.send(content=content, file=upload_file)
+                        log.info("Sent to %r", channel)
+                except Exception:
+                    await channel.send(
+                        f"I found a file called {sunvox_path.name!r} but it "
+                        "could not be loaded and rendered to an "
+                        "Ogg Vorbis file."
+                    )
+                    raise
 
 
 def main():
