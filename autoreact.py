@@ -16,16 +16,12 @@ def reactions_for_message_content(
     # extract salt 😎
     searchtext = content.replace("ꜞ", "i").replace("\u2006", " ")
     # 6-bit distortion 🎸
-    searchtext_withspaces = ascii_text(searchtext).lower()
-    # waveshaper ∿
-    searchtext_nospaces = searchtext_withspaces.replace(" ", "")
+    searchtext = ascii_text(searchtext).lower()
     log.debug("searchtext transformed %r -> %r", content, searchtext)
     reactions_by_index = {}
     for ename in set(emoji_map).intersection(set(reaction_options)):
         start = 0
         overrides = reaction_options.get(ename)
-        withspaces = overrides.get("withspaces", False)
-        searchtext = searchtext_withspaces if withspaces else searchtext_nospaces
         while True:
             try:
                 idx = searchtext.index(ename, start)
@@ -37,18 +33,18 @@ def reactions_for_message_content(
                 nobefore = overrides.get("nobefore", [])
                 noafter = overrides.get("noafter", [])
                 for override in nobefore:
-                    first = idx - len(override)
+                    first = idx - len(override) - 1
                     if first >= 0:
                         searchbefore = searchtext[first:idx]
-                        if searchbefore == override:
+                        if searchbefore == override + " ":
                             override_found = True
                             break
                 if not override_found:
                     for override in noafter:
-                        last = start + len(override)
+                        last = start + len(override) + 1
                         if last <= len(searchtext):
                             searchafter = searchtext[start:last]
-                            if searchafter == override:
+                            if searchafter == " " + override:
                                 override_found = True
                                 break
             inside_an_emoji = (
@@ -59,12 +55,16 @@ def reactions_for_message_content(
             )
             if inside_an_emoji:
                 override_found = True
-            if withspaces:
-                if idx > 0 and searchtext[idx - 1].isalnum():
-                    override_found = True
-                elif searchtext[start : start + 1].isalnum():
-                    override_found = True
+            if idx > 0 and searchtext[idx - 1].isalnum():
+                override_found = True
+            elif searchtext[start : start + 1].isalnum():
+                override_found = True
             if not override_found:
                 reactions_by_index[idx] = ename
-    reactions = [emoji_map[ename] for idx, ename in sorted(reactions_by_index.items())]
+    reactions = []
+    for idx, ename in sorted(reactions_by_index.items()):
+        emoji = emoji_map[ename]
+        if emoji not in reactions:
+            reactions.append(emoji)
     return reactions
+    

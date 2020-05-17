@@ -10,21 +10,21 @@ from sunvox.buffered import BufferedProcess
 log = getLogger(__name__)
 
 
-async def sunvox2ogg(
+async def sunvox2audio(
     process: BufferedProcess,
     slot: Slot,
-    ogg_path: Path,
+    audio_path: Path,
     freq: int,
     channels: int,
     max_file_size=8000000,
 ):
-    ogg_path = Path(ogg_path)
+    audio_path = Path(audio_path)
     try:
         length = slot.get_song_length_frames()
         log.info("Sunvox reports song length is %d frames", length)
         slot.play_from_beginning()
         position = 0
-        with SoundFile(str(ogg_path), "w", freq, channels) as ogg_f:
+        with SoundFile(str(audio_path), "w", freq, channels) as audio_f:
             while position < length:
                 percentage = position * 100.0 / length
                 buffer = process.fill_buffer()
@@ -33,8 +33,8 @@ async def sunvox2ogg(
                 copy_size = end_pos - position
                 if copy_size < one_second:
                     buffer = buffer[:copy_size]
-                ogg_f.buffer_write(buffer, dtype="float32")
-                with ogg_path.open("rb") as written_ogg_f:
+                audio_f.buffer_write(buffer, dtype="float32")
+                with audio_path.open("rb") as written_ogg_f:
                     written_ogg_f.seek(0, 2)
                     file_size = written_ogg_f.tell()
                     if file_size > max_file_size:
@@ -54,7 +54,7 @@ async def sunvox2ogg(
 def main():
     basicConfig(level="DEBUG")
     sunvox_path, ogg_path = sys.argv[1:]
-    future = sunvox2ogg(sunvox_path, ogg_path)
+    future = sunvox2audio(sunvox_path, ogg_path)
     asyncio.get_event_loop().run_until_complete(future)
 
 

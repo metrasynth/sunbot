@@ -10,7 +10,7 @@ from sunvox.buffered import BufferedProcess, float32
 
 from autoreact import reactions_for_message_content
 from reactions import REACTION_OPTIONS
-from sunvox2ogg import sunvox2ogg
+from sunvox2audio import sunvox2audio
 
 log = logging.getLogger(__name__)
 
@@ -78,27 +78,27 @@ class SunBotClient(discord.Client):
                     project_name = slot.get_song_name()
                     await channel.send(
                         f"I found a SunVox Project, called {project_name!r}. "
-                        "I'll render it to an OGG file now and upload it here."
+                        "I'll render it to an audio file now and upload it here."
                     )
                     ogg_path = sunvox_path.with_suffix(".ogg")
-                    await sunvox2ogg(
+                    await sunvox2audio(
                         process=process,
                         slot=slot,
-                        ogg_path=ogg_path,
+                        audio_path=ogg_path,
                         freq=freq,
                         channels=channels,
                     )
                     log.info("Rendered to %r", ogg_path)
                     with ogg_path.open("rb") as f:
                         upload_file = discord.File(f, filename=ogg_path.name)
-                        content = f"Here is the OGG file for {project_name!r}:"
+                        content = f"Here is the audio file for {project_name!r}:"
                         await channel.send(content=content, file=upload_file)
                         log.info("Sent to %r", channel)
                 except Exception:
                     await channel.send(
                         f"I found a file called {sunvox_path.name!r} but it "
                         "could not be loaded and rendered to an "
-                        "Ogg Vorbis file."
+                        "audio file."
                     )
                     raise
 

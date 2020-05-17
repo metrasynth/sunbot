@@ -7,11 +7,13 @@ def test_reactions():
     test_data = [
         ("of me", []),
         ("fm", ["fm"]),
-        ("ᵖꜞᵗᶜʰ ˢʰꜞᶠᵗᵉʳ", ["pitchshifter"]),
+        ("ᵖꜞᵗᶜʰ ˢʰꜞᶠᵗᵉʳ", ["pitch shifter"]),
         ("vocal filter pro", []),
-        ("vocal filter", ["vocalfilter"]),
+        ("vocal filter", ["vocal filter"]),
         ("filter", ["filter"]),
-        ("filter pro", ["filterpro"]),
+        ("filter pro", ["filter pro"]),
+        ("golf ozone", []),
+        ("i am using a lfo (or is it 'an lfo'?)", ["lfo"]),
     ]
     for content, expected_reactions in test_data:
         reactions = reactions_for_message_content(
