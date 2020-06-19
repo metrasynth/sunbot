@@ -3,8 +3,15 @@ import os
 from logging import getLogger, basicConfig
 import sys
 from pathlib import Path
+from typing import List
 
 import discord
+import librosa
+import librosa.display
+import matplotlib.pyplot as plot
+import numpy
+from scipy.io import wavfile
+
 from soundfile import SoundFile
 from sunvox.api import Slot
 from sunvox.buffered import BufferedProcess, float32
@@ -40,10 +47,11 @@ class ProjectRendererClientMixin:
                         "I'll render it to an audio file now and upload it here."
                     )
                     ogg_path = sunvox_path.with_suffix(".ogg")
+                    wav_path = sunvox_path.with_suffix(".wav")
                     await sunvox2audio(
                         process=process,
                         slot=slot,
-                        audio_path=ogg_path,
+                        audio_paths=[ogg_path, wav_path],
                         freq=freq,
                         channels=channels,
                     )
@@ -52,7 +60,7 @@ class ProjectRendererClientMixin:
                         upload_file = discord.File(f, filename=ogg_path.name)
                         content = f"Here is the audio file for {project_name!r}:"
                         await channel.send(content=content, file=upload_file)
-                        log.info("Sent to %r", channel)
+                        log.info("OGG Sent to %r", channel)
                 except Exception:
                     await channel.send(
                         f"I found a file called {sunvox_path.name!r} but it "
@@ -60,23 +68,65 @@ class ProjectRendererClientMixin:
                         "audio file."
                     )
                     raise
+                try:
+                    png_path = sunvox_path.with_suffix(".png")
+                    with wav_path.open("rb") as f:
+                        freq, data = wavfile.read(f)
+                    wav_path.unlink()
+                    y = data.transpose()
+                    plot.figure(figsize=(14, 9))
+                    plot.suptitle(project_name)
+                    plot.subplot(211)
+                    plot.title("Spectrogram")
+                    CQT = librosa.amplitude_to_db(
+                        numpy.abs(librosa.cqt((y[0] + y[1]) / 2, sr=freq)),
+                        ref=numpy.max,
+                    )
+                    ax = librosa.display.specshow(
+                        CQT, x_axis="time", y_axis="cqt_note", sr=freq
+                    )
+                    ax.set_xlabel(None)
+                    plot.subplot(212)
+                    plot.title("Audioform")
+                    librosa.display.waveplot(y[0], sr=freq, alpha=0.5, color="blue")
+                    librosa.display.waveplot(y[1], sr=freq, alpha=0.5, color="red")
+                    plot.savefig(png_path)
+                    with png_path.open("rb") as f:
+                        upload_file = discord.File(f, filename=png_path.name)
+                        await channel.send(file=upload_file)
+                        log.info("PNG Sent to %r", channel)
+                except Exception:
+                    await channel.send(
+                        f"I could not render the spectrogram and waveform for {project_name!r}"
+                    )
+                    raise
 
 
 async def sunvox2audio(
     process: BufferedProcess,
     slot: Slot,
-    audio_path: Path,
+    audio_paths: List[Path],
     freq: int,
     channels: int,
     max_file_size=8000000,
 ):
-    audio_path = Path(audio_path)
+    audio_paths = [Path(p) for p in audio_paths]
     try:
         length = slot.get_song_length_frames()
         log.info("Sunvox reports song length is %d frames", length)
         slot.play_from_beginning()
         position = 0
-        with SoundFile(str(audio_path), "w", freq, channels) as audio_f:
+        audio_files = [
+            SoundFile(
+                str(p),
+                "w",
+                freq,
+                channels,
+                "FLOAT" if str(p).endswith(".wav") else None,
+            )
+            for p in audio_paths
+        ]
+        try:
             while position < length:
                 percentage = position * 100.0 / length
                 buffer = process.fill_buffer()
@@ -85,10 +135,11 @@ async def sunvox2audio(
                 copy_size = end_pos - position
                 if copy_size < one_second:
                     buffer = buffer[:copy_size]
-                audio_f.buffer_write(buffer, dtype="float32")
-                with audio_path.open("rb") as written_ogg_f:
-                    written_ogg_f.seek(0, 2)
-                    file_size = written_ogg_f.tell()
+                for f in audio_files:
+                    f.buffer_write(buffer, dtype="float32")
+                with audio_paths[0].open("rb") as primary_f:
+                    primary_f.seek(0, 2)
+                    file_size = primary_f.tell()
                     if file_size > max_file_size:
                         log.warning(
                             "Stopped writing at %r bytes (exceeded %r)",
@@ -105,6 +156,9 @@ async def sunvox2audio(
                 )
                 position = end_pos
                 await asyncio.sleep(0)
+        finally:
+            for f in audio_files:
+                f.close()
     finally:
         process.kill()
 

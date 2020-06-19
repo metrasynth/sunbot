@@ -3,5 +3,8 @@ normality == 2.0.0
 pysoundfile == 0.9.0.post1
 python-dotenv == 0.13.0
 PyICU==2.5
+matplotlib==3.2.2
+scipy==1.4.1
+-e git+https://github.com/librosa/librosa@main#egg=librosa
 -e git+https://github.com/metrasynth/sunvox-dll-python@1.9.5c#egg=sunvox-dll-python
 -e git+https://github.com/metrasynth/radiant-voices@0.4.x-dev#egg=radiant-voices
