@@ -5,3 +5,6 @@ __pycache__/
 files/
 
 local.env
+
+*.wav
+*.sunvox
