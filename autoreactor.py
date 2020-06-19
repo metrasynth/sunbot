@@ -1,18 +1,47 @@
 import logging
 from typing import Any, Dict, List
 
-from discord import Emoji
+import discord
 from normality.transliteration import ascii_text
 
+from reactions import REACTION_OPTIONS
 
 log = logging.getLogger(__name__)
 
 
+class AutoReactorClientMixin:
+    def __post_init__(self):
+        self.guild_emoji = {}
+
+    async def __on_ready__(self):
+        guild: discord.Guild
+        emoji: discord.Emoji
+        for guild in self.guilds:
+            if guild.name in self.guild_names:
+                e = self.guild_emoji[guild.id] = {}
+                for emoji in guild.emojis:
+                    ename = emoji.name.lower()
+                    print(f"{guild.name} / {emoji.name} ({ename})")
+                    e[ename] = emoji
+
+    async def __on_message__(self, message: discord.Message):
+        emoji_map = self.guild_emoji[message.guild.id]
+        reactions = reactions_for_message_content(
+            content=message.content,
+            emoji_map=emoji_map,
+            reaction_options=REACTION_OPTIONS,
+        )
+        if reactions:
+            log.info("Reacting to %r with %r", message.content, reactions)
+        for reaction in reactions:
+            await message.add_reaction(reaction)
+
+
 def reactions_for_message_content(
     content: str,
-    emoji_map: Dict[str, Emoji],
+    emoji_map: Dict[str, discord.Emoji],
     reaction_options: Dict[str, Dict[str, Any]],
-) -> List[Emoji]:
+) -> List[discord.Emoji]:
     # extract salt 😎
     searchtext = content.replace("ꜞ", "i").replace("\u2006", " ")
     # 6-bit distortion 🎸
@@ -67,4 +96,3 @@ def reactions_for_message_content(
         if emoji not in reactions:
             reactions.append(emoji)
     return reactions
-    
