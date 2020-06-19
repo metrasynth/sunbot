@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from sunvox.api import Slot
 from sunvox.buffered import BufferedProcess, float32
 
-from autoreact import reactions_for_message_content
+from autoreactor import reactions_for_message_content
 from reactions import REACTION_OPTIONS
 from sunvox2audio import sunvox2audio
 

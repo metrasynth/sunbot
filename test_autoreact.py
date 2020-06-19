@@ -1,4 +1,4 @@
-from autoreact import reactions_for_message_content
+from autoreactor import reactions_for_message_content
 from reactions import REACTION_OPTIONS
 
 
