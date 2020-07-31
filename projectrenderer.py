@@ -79,16 +79,18 @@ class ProjectRendererClientMixin:
                     plot.suptitle(project_name, color="white", weight="bold", size=14)
                     plot.subplot(211)
                     plot.title(None)
+                    mono_y = (y[0] + y[1]) / 2
                     CQT = librosa.amplitude_to_db(
-                        numpy.abs(librosa.cqt((y[0] + y[1]) / 2, sr=freq)),
+                        numpy.abs(librosa.cqt(mono_y, sr=freq)),
                         ref=numpy.max,
                     )
-                    ax = librosa.display.specshow(
+                    librosa.display.specshow(
                         CQT, x_axis="time", y_axis="cqt_note", sr=freq
                     )
-                    ax.set_xlabel(None)
+                    # ax.set_xlabel(None)
                     plot.subplot(212)
                     plot.title(None)
+                    librosa.display.waveplot(mono_y, sr=freq, alpha=0.5, color="black")
                     librosa.display.waveplot(y[0], sr=freq, alpha=0.5, color="blue")
                     librosa.display.waveplot(y[1], sr=freq, alpha=0.5, color="red")
                     plot.tight_layout()
