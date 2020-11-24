@@ -6,5 +6,5 @@ PyICU==2.5
 matplotlib==3.3.0
 scipy==1.5.2
 -e git+https://github.com/librosa/librosa@main#egg=librosa
--e git+https://github.com/metrasynth/sunvox-dll-python@1.9.5c#egg=sunvox-dll-python
+-e git+https://github.com/metrasynth/sunvox-dll-python@1.9.6#egg=sunvox-dll-python
 -e git+https://github.com/metrasynth/radiant-voices@0.4.x-dev#egg=radiant-voices
