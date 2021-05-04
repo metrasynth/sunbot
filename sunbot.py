@@ -5,13 +5,19 @@ from typing import List
 import discord
 from dotenv import load_dotenv
 
-from autoreactor import AutoReactorClientMixin
+# from autoreactor import AutoReactorClientMixin
 from projectrenderer import ProjectRendererClientMixin
+from sunvoxaudio import SunvoxAudioUploaderMixin
 
 log = logging.getLogger(__name__)
 
 
-class SunBotClient(discord.Client, AutoReactorClientMixin, ProjectRendererClientMixin):
+class SunBotClient(
+    discord.Client,
+    # AutoReactorClientMixin,
+    ProjectRendererClientMixin,
+    SunvoxAudioUploaderMixin,
+):
     def __init__(self, guild_names: List[str]):
         super(SunBotClient, self).__init__()
         self.guild_names = guild_names
