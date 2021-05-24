@@ -68,42 +68,42 @@ class ProjectRendererClientMixin:
                         "audio file."
                     )
                     raise
-                try:
-                    # [TODO] do all this in a thread
-                    png_path = sunvox_path.with_suffix(".png")
-                    with wav_path.open("rb") as f:
-                        freq, data = wavfile.read(f)
-                    wav_path.unlink()
-                    y = data.transpose()
-                    plot.figure(figsize=(14, 9))
-                    plot.suptitle(project_name, color="white", weight="bold", size=14)
-                    plot.subplot(211)
-                    plot.title(None)
-                    mono_y = (y[0] + y[1]) / 2
-                    CQT = librosa.amplitude_to_db(
-                        numpy.abs(librosa.cqt(mono_y, sr=freq)),
-                        ref=numpy.max,
-                    )
-                    librosa.display.specshow(
-                        CQT, x_axis="time", y_axis="cqt_note", sr=freq
-                    )
-                    # ax.set_xlabel(None)
-                    plot.subplot(212)
-                    plot.title(None)
-                    librosa.display.waveplot(mono_y, sr=freq, alpha=0.5, color="black")
-                    librosa.display.waveplot(y[0], sr=freq, alpha=0.5, color="blue")
-                    librosa.display.waveplot(y[1], sr=freq, alpha=0.5, color="red")
-                    plot.tight_layout()
-                    plot.savefig(png_path)
-                    with png_path.open("rb") as f:
-                        upload_file = discord.File(f, filename=png_path.name)
-                        await channel.send(file=upload_file)
-                        log.info("PNG Sent to %r", channel)
-                except Exception:
-                    await channel.send(
-                        f"I could not render the spectrogram and waveform for {project_name!r}"
-                    )
-                    raise
+                # try:
+                #     # [TODO] do all this in a thread
+                #     png_path = sunvox_path.with_suffix(".png")
+                #     with wav_path.open("rb") as f:
+                #         freq, data = wavfile.read(f)
+                #     wav_path.unlink()
+                #     y = data.transpose()
+                #     plot.figure(figsize=(14, 9))
+                #     plot.suptitle(project_name, color="white", weight="bold", size=14)
+                #     plot.subplot(211)
+                #     plot.title(None)
+                #     mono_y = (y[0] + y[1]) / 2
+                #     CQT = librosa.amplitude_to_db(
+                #         numpy.abs(librosa.cqt(mono_y, sr=freq)),
+                #         ref=numpy.max,
+                #     )
+                #     librosa.display.specshow(
+                #         CQT, x_axis="time", y_axis="cqt_note", sr=freq
+                #     )
+                #     # ax.set_xlabel(None)
+                #     plot.subplot(212)
+                #     plot.title(None)
+                #     librosa.display.waveplot(mono_y, sr=freq, alpha=0.5, color="black")
+                #     librosa.display.waveplot(y[0], sr=freq, alpha=0.5, color="blue")
+                #     librosa.display.waveplot(y[1], sr=freq, alpha=0.5, color="red")
+                #     plot.tight_layout()
+                #     plot.savefig(png_path)
+                #     with png_path.open("rb") as f:
+                #         upload_file = discord.File(f, filename=png_path.name)
+                #         await channel.send(file=upload_file)
+                #         log.info("PNG Sent to %r", channel)
+                # except Exception:
+                #     await channel.send(
+                #         f"I could not render the spectrogram and waveform for {project_name!r}"
+                #     )
+                #     raise
 
 
 async def sunvox2audio(
