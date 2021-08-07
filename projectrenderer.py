@@ -36,7 +36,7 @@ class ProjectRendererClientMixin:
                         name=project_name,
                         auto_archive_duration=60,
                     )
-                    await thread.send(
+                    initial = await thread.send(
                         f"I found a SunVox Project, called {project_name!r}. "
                         "I'll render a preview of it now and upload it here."
                     )
@@ -71,6 +71,7 @@ class ProjectRendererClientMixin:
                         upload_file = discord.File(f, filename=mp4_path.name)
                         content = f"Here is a preview of {project_name!r}:"
                         await thread.send(content=content, file=upload_file)
+                        await initial.delete()
                         log.info("MP4 Sent to %r", thread)
                 except Exception as e:
                     await channel.send(
