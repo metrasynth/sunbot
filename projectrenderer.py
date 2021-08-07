@@ -27,18 +27,16 @@ class ProjectRendererClientMixin:
                     await attachment.save(f)
                     log.info("Saved to %r", sunvox_path)
                 try:
-                    freq = 44100
-                    channels = 2
-                    process = BufferedProcess(
-                        freq=freq,
-                        size=freq,
-                        channels=channels,
-                        data_type=float32,
-                    )
+                    process = BufferedProcess()
                     slot = Slot(sunvox_path, process=process)
                     project_name = slot.get_song_name()
                     process.kill()
-                    await channel.send(
+
+                    thread = await message.start_thread(
+                        name=project_name,
+                        auto_archive_duration=60,
+                    )
+                    await thread.send(
                         f"I found a SunVox Project, called {project_name!r}. "
                         "I'll render a preview of it now and upload it here."
                     )
@@ -72,12 +70,12 @@ class ProjectRendererClientMixin:
                     with mp4_path.open("rb") as f:
                         upload_file = discord.File(f, filename=mp4_path.name)
                         content = f"Here is a preview of {project_name!r}:"
-                        await channel.send(content=content, file=upload_file)
-                        log.info("MP4 Sent to %r", channel)
-                except Exception:
+                        await thread.send(content=content, file=upload_file)
+                        log.info("MP4 Sent to %r", thread)
+                except Exception as e:
                     await channel.send(
                         f"I found a file called {sunvox_path.name!r} but it "
                         "could not be loaded and rendered to an "
-                        "audio file."
+                        f"audio file due to an error: {e}."
                     )
                     raise
