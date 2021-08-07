@@ -43,10 +43,10 @@ class ProjectRendererClientMixin:
                     project_info = dedent(
                         f"""
                         {project_name}
-                        Uploaded by: {message.author}
-                        to the "{message.channel}" channel
-                        on the "{message.guild.name}" Discord server
-                        at {message.created_at.isoformat()}
+                        Uploaded by: {message.author.display_name}
+                        to #{message.channel}
+                        ({message.guild.name} Discord server)
+                        at {message.created_at.replace(microsecond=0).isoformat()}
                         """
                     ).strip()
                     txt_path = sunvox_path.with_suffix(".txt")
