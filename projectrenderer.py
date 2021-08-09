@@ -6,7 +6,7 @@ from textwrap import dedent
 
 import discord
 from sunvox.api import Slot
-from sunvox.buffered import BufferedProcess, float32
+from sunvox.buffered import BufferedProcess
 
 log = getLogger(__name__)
 
@@ -36,9 +36,10 @@ class ProjectRendererClientMixin:
                         name=project_name,
                         auto_archive_duration=60,
                     )
-                    initial = await thread.send(
-                        f"I found a SunVox Project, called {project_name!r}. "
-                        "I'll render a preview of it now and upload it here."
+                    sanitized_project_name = project_name.replace("`", "'")
+                    initial1 = await thread.send(
+                        f"Found a SunVox project called `{sanitized_project_name}`. "
+                        "Rendering MP4 preview..."
                     )
                     project_info = dedent(
                         f"""
@@ -58,8 +59,6 @@ class ProjectRendererClientMixin:
                         "-m",
                         "sunvid",
                         "render",
-                        "--font",
-                        "/home/bots/proj/sunvid/SunDogMedium.ttf",  # [TODO] get from env
                         "--output-path-template",
                         str(mp4_path),
                         "--song-name-template",
@@ -67,6 +66,15 @@ class ProjectRendererClientMixin:
                         str(sunvox_path),
                     )
                     await process.wait()
+
+                    with mp4_path.open("rb") as f:
+                        upload_file = discord.File(f, filename=mp4_path.name)
+                        content = f"Here is a preview of {project_name!r}:"
+                        await thread.send(content=content, file=upload_file)
+                    log.info("MP4 Sent to %r", thread)
+                    await initial1.delete()
+
+                    initial2 = await thread.send("Rendering OGG preview...")
 
                     ogg_path = sunvox_path.with_suffix(".ogg")
                     process = await asyncio.create_subprocess_exec(
@@ -78,25 +86,20 @@ class ProjectRendererClientMixin:
                         "libvorbis",
                         "--video-codec",
                         "none",
-                        "--font",
-                        "/home/bots/proj/sunvid/SunDogMedium.ttf",  # [TODO] get from env
                         "--output-path-template",
                         str(ogg_path),
                         str(sunvox_path),
                     )
                     await process.wait()
 
-                    log.info("Rendering %r finished.", sunvox_path)
-                    with mp4_path.open("rb") as f:
-                        upload_file = discord.File(f, filename=mp4_path.name)
-                        content = f"Here is a preview of {project_name!r}:"
-                        await thread.send(content=content, file=upload_file)
-                        log.info("MP4 Sent to %r", thread)
                     with ogg_path.open("rb") as f:
                         upload_file = discord.File(f, filename=ogg_path.name)
                         await thread.send(file=upload_file)
-                        log.info("OGG Sent to %r", thread)
-                    await initial.delete()
+                    log.info("OGG Sent to %r", thread)
+                    await initial2.delete()
+
+                    log.info("Rendering %r finished.", sunvox_path)
+
                 except Exception as e:
                     await channel.send(
                         f"I found a file called {sunvox_path.name!r} but it "
