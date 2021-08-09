@@ -30,7 +30,11 @@ class ProjectRendererClientMixin:
                     process = BufferedProcess()
                     slot = Slot(sunvox_path, process=process)
                     project_name = slot.get_song_name()
+                    song_length = slot.get_song_length_frames()
                     process.kill()
+
+                    if song_length == 0:
+                        return
 
                     thread = await message.start_thread(
                         name=project_name,
