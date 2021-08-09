@@ -94,8 +94,7 @@ class ProjectRendererClientMixin:
                         log.info("MP4 Sent to %r", thread)
                     with ogg_path.open("rb") as f:
                         upload_file = discord.File(f, filename=ogg_path.name)
-                        content = f"By popular demand, here is a 128kbps OGG of {project_name!r}:"
-                        await thread.send(content=content, file=upload_file)
+                        await thread.send(file=upload_file)
                         log.info("OGG Sent to %r", thread)
                     await initial.delete()
                 except Exception as e:
