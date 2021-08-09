@@ -69,7 +69,7 @@ class ProjectRendererClientMixin:
 
                     with mp4_path.open("rb") as f:
                         upload_file = discord.File(f, filename=mp4_path.name)
-                        content = f"Here is a preview of {project_name!r}:"
+                        content = f"Here is a preview of `{sanitized_project_name}`:"
                         await thread.send(content=content, file=upload_file)
                     log.info("MP4 Sent to %r", thread)
                     await initial1.delete()
@@ -102,7 +102,7 @@ class ProjectRendererClientMixin:
 
                 except Exception as e:
                     await channel.send(
-                        f"I found a file called {sunvox_path.name!r} but it "
+                        f"""I found a file called `{sunvox_path.name.replace('`', "'")}` but it """
                         "could not be loaded and rendered to an "
                         f"audio file due to an error: {e}."
                     )
