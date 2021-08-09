@@ -51,12 +51,17 @@ class ProjectRendererClientMixin:
                     ).strip()
                     txt_path = sunvox_path.with_suffix(".txt")
                     txt_path.write_text(project_info)
+
                     mp4_path = sunvox_path.with_suffix(".mp4")
                     process = await asyncio.create_subprocess_exec(
                         "/home/bots/.virtualenvs/sunvid/bin/python",  # [TODO] get from env
                         "-m",
                         "sunvid",
                         "render",
+                        "--audio-bitrate",
+                        "128",
+                        "--video-bitrate",
+                        "32",
                         "--font",
                         "/home/bots/proj/sunvid/SunDogMedium.ttf",  # [TODO] get from env
                         "--output-path-template",
@@ -66,13 +71,39 @@ class ProjectRendererClientMixin:
                         str(sunvox_path),
                     )
                     await process.wait()
+
+                    ogg_path = sunvox_path.with_suffix(".ogg")
+                    process = await asyncio.create_subprocess_exec(
+                        "/home/bots/.virtualenvs/sunvid/bin/python",  # [TODO] get from env
+                        "-m",
+                        "sunvid",
+                        "render",
+                        "--audio-bitrate",
+                        "128",
+                        "--audio-codec",
+                        "libvorbis",
+                        "--video-codec",
+                        "none",
+                        "--font",
+                        "/home/bots/proj/sunvid/SunDogMedium.ttf",  # [TODO] get from env
+                        "--output-path-template",
+                        str(ogg_path),
+                        str(sunvox_path),
+                    )
+                    await process.wait()
+
                     log.info("Rendering %r finished.", sunvox_path)
                     with mp4_path.open("rb") as f:
                         upload_file = discord.File(f, filename=mp4_path.name)
                         content = f"Here is a preview of {project_name!r}:"
                         await thread.send(content=content, file=upload_file)
-                        await initial.delete()
                         log.info("MP4 Sent to %r", thread)
+                    with ogg_path.open("rb") as f:
+                        upload_file = discord.File(f, filename=ogg_path.name)
+                        content = f"By popular demand, here is a 128kbps OGG of {project_name!r}:"
+                        await thread.send(content=content, file=upload_file)
+                        log.info("OGG Sent to %r", thread)
+                    await initial.delete()
                 except Exception as e:
                     await channel.send(
                         f"I found a file called {sunvox_path.name!r} but it "
