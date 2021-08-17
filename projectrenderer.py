@@ -5,6 +5,7 @@ from pathlib import Path
 from textwrap import dedent
 
 import discord
+from discord import Thread
 from sunvox.api import Slot
 from sunvox.buffered import BufferedProcess
 
@@ -36,10 +37,13 @@ class ProjectRendererClientMixin:
                     if song_length == 0:
                         return
 
-                    thread = await message.start_thread(
-                        name=project_name,
-                        auto_archive_duration=60,
-                    )
+                    if isinstance(message.channel, Thread):
+                        thread = message.channel
+                    else:
+                        thread = await message.create_thread(
+                            name=project_name,
+                            auto_archive_duration=60,
+                        )
                     sanitized_project_name = project_name.replace("`", "'")
                     initial1 = await thread.send(
                         f"Found a SunVox project called `{sanitized_project_name}`. "
