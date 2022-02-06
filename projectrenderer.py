@@ -30,7 +30,7 @@ class ProjectRendererClientMixin:
                 try:
                     process = BufferedProcess()
                     slot = Slot(sunvox_path, process=process)
-                    project_name = slot.get_song_name()
+                    project_name = slot.get_song_name() or "(Untitled)"
                     song_length = slot.get_song_length_frames()
                     process.kill()
 
