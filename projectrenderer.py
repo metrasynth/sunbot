@@ -45,7 +45,32 @@ class ProjectRendererClientMixin:
                             auto_archive_duration=60,
                         )
                     sanitized_project_name = project_name.replace("`", "'")
-                    initial1 = await thread.send(
+
+                    rendering_ogg_preview_message = await thread.send("Rendering OGG preview...")
+
+                    ogg_path = sunvox_path.with_suffix(".ogg")
+                    process = await asyncio.create_subprocess_exec(
+                        "/home/bots/.virtualenvs/sunvid/bin/python",  # [TODO] get from env
+                        "-m",
+                        "sunvid",
+                        "render",
+                        "--audio-codec",
+                        "libvorbis",
+                        "--video-codec",
+                        "none",
+                        "--output-path-template",
+                        str(ogg_path),
+                        str(sunvox_path),
+                    )
+                    await process.wait()
+
+                    with ogg_path.open("rb") as f:
+                        upload_file = discord.File(f, filename=ogg_path.name)
+                        await thread.send(file=upload_file)
+                    log.info("OGG Sent to %r", thread)
+                    await rendering_ogg_preview_message.delete()
+
+                    rendering_mp4_preview_message = await thread.send(
                         f"Found a SunVox project called `{sanitized_project_name}`. "
                         "Rendering MP4 preview..."
                     )
@@ -80,31 +105,7 @@ class ProjectRendererClientMixin:
                         content = f"Here is a preview of `{sanitized_project_name}`:"
                         await thread.send(content=content, file=upload_file)
                     log.info("MP4 Sent to %r", thread)
-                    await initial1.delete()
-
-                    initial2 = await thread.send("Rendering OGG preview...")
-
-                    ogg_path = sunvox_path.with_suffix(".ogg")
-                    process = await asyncio.create_subprocess_exec(
-                        "/home/bots/.virtualenvs/sunvid/bin/python",  # [TODO] get from env
-                        "-m",
-                        "sunvid",
-                        "render",
-                        "--audio-codec",
-                        "libvorbis",
-                        "--video-codec",
-                        "none",
-                        "--output-path-template",
-                        str(ogg_path),
-                        str(sunvox_path),
-                    )
-                    await process.wait()
-
-                    with ogg_path.open("rb") as f:
-                        upload_file = discord.File(f, filename=ogg_path.name)
-                        await thread.send(file=upload_file)
-                    log.info("OGG Sent to %r", thread)
-                    await initial2.delete()
+                    await rendering_mp4_preview_message.delete()
 
                     log.info("Rendering %r finished.", sunvox_path)
 
