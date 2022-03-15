@@ -46,7 +46,9 @@ class ProjectRendererClientMixin:
                         )
                     sanitized_project_name = project_name.replace("`", "'")
 
-                    rendering_ogg_preview_message = await thread.send("Rendering OGG preview...")
+                    rendering_ogg_preview_message = await thread.send(
+                        "Rendering OGG preview..."
+                    )
 
                     ogg_path = sunvox_path.with_suffix(".ogg")
                     process = await asyncio.create_subprocess_exec(
