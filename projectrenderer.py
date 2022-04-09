@@ -153,9 +153,9 @@ class ProjectRendererClientMixin:
 
         except Exception as e:
             await channel.send(
-                "Yo <@250124746618961920>, "
-                f"""I found a file called `{sunvox_path.name.replace('`', "'")}` but it """
-                "could not be loaded and rendered to an "
-                f"audio file due to an error: {e}."
+                f"""I found a file called `{sunvox_path.name.replace('`', "'")}` """
+                "but it could not be loaded and rendered to an audio file "
+                "due to a SunBot error. "
+                "On behalf of my maintainer, <@250124746618961920>, we apologize!"
             )
             raise
