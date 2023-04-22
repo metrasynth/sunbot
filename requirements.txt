@@ -4,4 +4,4 @@ normality ==2.2.2
 pysoundfile == 0.9.0.post1
 python-dotenv ==0.19.0
 PyICU==2.7.4
-sunvox-dll-python==0.3.3.2.0.0.0
+sunvox-dll-python==0.3.5.2.1.0.3
