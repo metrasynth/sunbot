@@ -91,7 +91,7 @@ class ProjectRendererClientMixin:
             )
 
             ogg_path = sunvox_path.with_suffix(".ogg")
-            process = await asyncio.create_subprocess_exec(
+            args = (
                 "/home/bots/.virtualenvs/sunvid/bin/python",  # [TODO] get from env
                 "-m",
                 "sunvid",
@@ -104,6 +104,8 @@ class ProjectRendererClientMixin:
                 str(ogg_path),
                 str(sunvox_path),
             )
+            log.info(args)
+            process = await asyncio.create_subprocess_exec(*args)
             await process.wait()
 
             with ogg_path.open("rb") as f:
@@ -129,7 +131,7 @@ class ProjectRendererClientMixin:
             txt_path.write_text(project_info)
 
             mp4_path = sunvox_path.with_suffix(".mp4")
-            process = await asyncio.create_subprocess_exec(
+            args = (
                 "/home/bots/.virtualenvs/sunvid/bin/python",  # [TODO] get from env
                 "-m",
                 "sunvid",
@@ -140,6 +142,8 @@ class ProjectRendererClientMixin:
                 f"@{txt_path}",
                 str(sunvox_path),
             )
+            log.info(args)
+            process = await asyncio.create_subprocess_exec(*args)
             await process.wait()
 
             with mp4_path.open("rb") as f:
