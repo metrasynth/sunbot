@@ -91,8 +91,9 @@ class ProjectRendererClientMixin:
             )
 
             ogg_path = sunvox_path.with_suffix(".ogg")
+            sunvid_python = Path("~/.virtualenvs/sunvid/bin/python").expanduser()
             args = (
-                "/home/bots/.virtualenvs/sunvid/bin/python",  # [TODO] get from env
+                str(sunvid_python),  # [TODO] get from env
                 "-m",
                 "sunvid",
                 "render",
@@ -132,7 +133,7 @@ class ProjectRendererClientMixin:
 
             mp4_path = sunvox_path.with_suffix(".mp4")
             args = (
-                "/home/bots/.virtualenvs/sunvid/bin/python",  # [TODO] get from env
+                str(sunvid_python),  # [TODO] get from env
                 "-m",
                 "sunvid",
                 "render",
