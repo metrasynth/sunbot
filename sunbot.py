@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 # from autoreactor import AutoReactorClientMixin
 from projectrenderer import ProjectRendererClientMixin
 from sunvoxaudio import SunvoxAudioUploaderMixin
+from keepalive import KeepAliveMixin
 
 log = logging.getLogger(__name__)
 
@@ -18,6 +19,7 @@ class SunBotClient(
     # AutoReactorClientMixin,
     ProjectRendererClientMixin,
     SunvoxAudioUploaderMixin,
+    KeepAliveMixin,
 ):
     def __init__(self, guild_names: List[str], **kwargs):
         super(SunBotClient, self).__init__(**kwargs)
